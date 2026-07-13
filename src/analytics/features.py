@@ -29,7 +29,7 @@ class FeatureStore:
             return pd.DataFrame()
             
         df_prices = pd.DataFrame(prices_raw, columns=["time", "buy_price_inr", "sell_price_inr", "grid_frequency"])
-        df_prices["time"] = pd.to_datetime(df_prices["time"])
+        df_prices["time"] = pd.to_datetime(df_prices["time"], format="ISO8601")
         df_prices.set_index("time", inplace=True)
         df_prices = df_prices[~df_prices.index.duplicated(keep='first')]
 
@@ -39,7 +39,7 @@ class FeatureStore:
             return df_prices # return prices only if no telemetry
 
         df_telemetry = pd.DataFrame(telemetry_raw, columns=["time", "asset_id", "power_kw", "voltage", "anomaly_flag"])
-        df_telemetry["time"] = pd.to_datetime(df_telemetry["time"])
+        df_telemetry["time"] = pd.to_datetime(df_telemetry["time"], format="ISO8601")
 
         # Pivot telemetry so we have asset columns (solar_power_kw, wind_power_kw, etc.)
         # solar
@@ -169,7 +169,7 @@ class FeatureStore:
             if df_all.empty:
                 return pd.DataFrame()
                 
-            df_all["timestamp"] = pd.to_datetime(df_all["timestamp"])
+            df_all["timestamp"] = pd.to_datetime(df_all["timestamp"], format="ISO8601")
             df_all.set_index("timestamp", inplace=True)
             df_all.sort_index(inplace=True)
             

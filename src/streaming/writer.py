@@ -50,7 +50,7 @@ class DataLakeWriter:
             
             # Ensure timestamps are serialized as datetime objects for Parquet
             if "timestamp" in df.columns:
-                df["timestamp"] = pd.to_datetime(df["timestamp"])
+                df["timestamp"] = pd.to_datetime(df["timestamp"], format="ISO8601")
 
             # Generate unique filename based on record time to prevent overwrites
             epoch_time = int(ts.timestamp())

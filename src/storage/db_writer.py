@@ -10,11 +10,12 @@ from src.simulator.config import BUILDINGS_CONFIG, SOLAR_AREA, SOLAR_EFFICIENCY,
 logger = logging.getLogger(__name__)
 
 class GridMindTelemetryWriter:
-    def __init__(self, db_client: GridMindDBClient = None):
+    def __init__(self, db_client: GridMindDBClient = None, seed_history: bool = True):
         self.db = db_client or GridMindDBClient()
         self.seed_assets()
         # Automatically seed history if database has fewer than 10 rows (fixes Flaw 4)
-        self.seed_historical_telemetry(days=7)
+        if seed_history and not os.getenv("PYTEST_CURRENT_TEST"):
+            self.seed_historical_telemetry(days=7)
 
     def seed_historical_telemetry(self, days: int = 7):
         """

@@ -61,7 +61,7 @@ class GridMindOptimizer:
         )
 
         df = pd.DataFrame(rows, columns=["time", "target_type", "value"])
-        df["time"] = pd.to_datetime(df["time"])
+        df["time"] = pd.to_datetime(df["time"], format="ISO8601")
         
         # Pivot targets (demand, solar, wind, price) into columns
         df_pivot = df.pivot(index="time", columns="target_type", values="value")

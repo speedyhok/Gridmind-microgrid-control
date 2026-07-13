@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import logging
+from typing import Optional
 import psycopg2
 from psycopg2 import OperationalError
 
@@ -9,24 +10,40 @@ logger = logging.getLogger(__name__)
 class GridMindDBClient:
     def __init__(
         self,
-        pg_host: str = "localhost",
-        pg_port: int = 5432,
-        pg_user: str = "postgres",
-        pg_password: str = "postgres",
-        pg_database: str = "gridmind",
+        pg_host: Optional[str] = None,
+        pg_port: Optional[int] = None,
+        pg_user: Optional[str] = None,
+        pg_password: Optional[str] = None,
+        pg_database: Optional[str] = None,
         sqlite_path: str = "data/gridmind_storage.db"
     ):
-        self.pg_config = {
-            "host": pg_host,
-            "port": pg_port,
-            "user": pg_user,
-            "password": pg_password,
-            "database": pg_database,
-            "connect_timeout": 2  # Fail fast
-        }
         self.sqlite_path = sqlite_path
         self.mode = "postgres"
         self.connection = None
+        
+        # Resolve database connection info (env variables take precedence over code defaults)
+        self.pg_url = os.getenv("DATABASE_URL")
+        
+        # Resolve config parameters
+        resolved_host = pg_host or os.getenv("PGHOST") or os.getenv("DB_HOST") or "localhost"
+        resolved_port = pg_port or os.getenv("PGPORT") or os.getenv("DB_PORT") or 5432
+        resolved_user = pg_user or os.getenv("PGUSER") or os.getenv("DB_USER") or "postgres"
+        resolved_password = pg_password or os.getenv("PGPASSWORD") or os.getenv("DB_PASSWORD") or "postgres"
+        resolved_database = pg_database or os.getenv("PGDATABASE") or os.getenv("DB_DATABASE") or "gridmind"
+        
+        try:
+            resolved_port = int(resolved_port)
+        except (ValueError, TypeError):
+            resolved_port = 5432
+
+        self.pg_config = {
+            "host": resolved_host,
+            "port": resolved_port,
+            "user": resolved_user,
+            "password": resolved_password,
+            "database": resolved_database,
+            "connect_timeout": 2  # Fail fast
+        }
         
         # Ensure directories exist
         os.makedirs(os.path.dirname(self.sqlite_path), exist_ok=True)
@@ -40,7 +57,11 @@ class GridMindDBClient:
         try:
             logger.info("Attempting to connect to PostgreSQL database...")
             # Try to connect to postgres database
-            self.connection = psycopg2.connect(**self.pg_config)
+            if self.pg_url:
+                logger.info("Using DATABASE_URL connection string.")
+                self.connection = psycopg2.connect(self.pg_url, connect_timeout=2)
+            else:
+                self.connection = psycopg2.connect(**self.pg_config)
             self.mode = "postgres"
             logger.info("Successfully connected to PostgreSQL database.")
         except Exception as e:

@@ -1,0 +1,14 @@
+# Render Blueprint specification for GridMind
+services:
+  - type: web
+    name: gridmind-control-center
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.5
+      - key: DATABASE_URL
+        value: "" # Provide your Neon/Supabase PostgreSQL URL here. Falls back to SQLite if left empty.
+      - key: GRIDMIND_API_KEY
+        value: "gridmind_premium_secret_key" # Replace with a secure key in production. Used for X-API-Key protected endpoints.
