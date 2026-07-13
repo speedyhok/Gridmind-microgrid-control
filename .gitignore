@@ -1,0 +1,30 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Local databases & logs
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/dead_letter_queue.log
+
+# Caches & temporary exports
+data/cache/
+data/sim_output/
+data/ml_performance_report.md
+
+# Saved models
+data/models/*.pkl
+
+# IDE settings
+.vscode/
+.idea/
+.gemini/

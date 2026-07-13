@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridMind - Microgrid Control Center</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo-area">
+                <span class="pulse-ring"></span>
+                <h1>GRIDMIND</h1>
+                <span class="badge">MICROGRID CTL</span>
+            </div>
+            
+            <div class="header-status">
+                <div class="status-item">
+                    <span class="status-dot green" id="db-health-dot"></span>
+                    <span class="label">DATABASE:</span>
+                    <span class="val" id="db-mode">SQLITE</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">LIVE TIME:</span>
+                    <span class="val" id="live-clock">--:--:--</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Grid -->
+        <section class="kpi-grid">
+            <!-- Grid Demand Card -->
+            <div class="kpi-card glass blue-glow">
+                <div class="card-header">
+                    <span class="icon">⚡</span>
+                    <h3>CAMPUS DEMAND</h3>
+                </div>
+                <div class="card-body">
+                    <span class="kpi-val" id="kpi-demand">0.0</span>
+                    <span class="kpi-unit">kW</span>
+                </div>
+                <div class="card-footer">
+                    <span class="footer-trend desc">Active Smart Meters Load</span>
+                </div>
+            </div>
+
+            <!-- Green Generation Card -->
+            <div class="kpi-card glass green-glow">
+                <div class="card-header">
+                    <span class="icon">☀</span>
+                    <h3>GREEN GENERATION</h3>
+                </div>
+                <div class="card-body">
+                    <span class="kpi-val" id="kpi-generation">0.0</span>
+                    <span class="kpi-unit">kW</span>
+                </div>
+                <div class="card-footer">
+                    <span class="footer-text" id="kpi-gen-breakdown">Solar: 0.0 kW | Wind: 0.0 kW</span>
+                </div>
+            </div>
+
+            <!-- Battery State Card -->
+            <div class="kpi-card glass green-glow-alt">
+                <div class="card-header">
+                    <span class="icon">🔋</span>
+                    <h3>BATTERY SoC</h3>
+                </div>
+                <div class="card-body">
+                    <span class="kpi-val" id="kpi-soc">0</span>
+                    <span class="kpi-unit">%</span>
+                </div>
+                <div class="card-footer">
+                    <span class="footer-text" id="kpi-battery-flow">Capacity: 2000 kWh | Flow: 0.0 kW</span>
+                </div>
+            </div>
+
+            <!-- Spot Pricing Card -->
+            <div class="kpi-card glass blue-glow-alt">
+                <div class="card-header">
+                    <span class="icon">💵</span>
+                    <h3>SPOT GRID PRICE</h3>
+                </div>
+                <div class="card-body">
+                    <span class="kpi-val" id="kpi-price">0.00</span>
+                    <span class="kpi-unit">INR</span>
+                </div>
+                <div class="card-footer">
+                    <span class="footer-text" id="kpi-freq">Grid Freq: 50.00 Hz</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Chart Panels -->
+        <main class="dashboard-body">
+            <!-- Historical Flow Chart -->
+            <div class="panel glass chart-panel flex-grow-2">
+                <div class="panel-header">
+                    <h2>Live Microgrid Power Flows</h2>
+                    <span class="badge">Real-time History (30h)</span>
+                </div>
+                <div class="panel-body">
+                    <canvas id="historicalChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Optimization Forecast Panel -->
+            <div class="panel glass chart-panel flex-grow-2">
+                <div class="panel-header">
+                    <h2>Battery 24h Optimal Schedule</h2>
+                    <span class="badge" id="savings-badge">Opt Savings: --%</span>
+                </div>
+                <div class="panel-body">
+                    <canvas id="scheduleChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Controls Panel -->
+            <div class="panel glass controls-panel">
+                <div class="panel-header">
+                    <h2>Manual Battery Override</h2>
+                    <span class="status-tag" id="override-status-tag">Optimizer Control</span>
+                </div>
+                
+                <form id="override-form" class="override-form">
+                    <div class="form-group">
+                        <label for="override-cmd">Command Action</label>
+                        <select id="override-cmd">
+                            <option value="none">Release (Use Optimizer)</option>
+                            <option value="charge">Force Charge</option>
+                            <option value="discharge">Force Discharge</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="rate-group" style="display: none;">
+                        <label for="override-rate">Override Rate (kW)</label>
+                        <div class="range-input">
+                            <input type="range" id="override-rate" min="0" max="500" step="10" value="0">
+                            <span class="range-value" id="range-val-lbl">0 kW</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btn-submit-override">Apply Command</button>
+                </form>
+                
+                <div class="override-alert" id="override-active-alert" style="display: none;">
+                    ⚠️ OVERRIDE ENGAGED: Manual control overrides linear program schedules.
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="main-footer glass">
+            <p>Developed by <strong>Mohibul Hoque</strong> | <a href="mailto:hokworks@gmail.com">hokworks@gmail.com</a> | <a href="https://linkedin.com/in/speedymohibul" target="_blank" rel="noopener noreferrer">LinkedIn</a></p>
+        </footer>
+    </div>
+
+    <!-- Script -->
+    <script src="app.js"></script>
+</body>
+</html>
