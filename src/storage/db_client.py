@@ -59,7 +59,7 @@ class GridMindDBClient:
             # Try to connect to postgres database
             if self.pg_url:
                 logger.info("Using DATABASE_URL connection string.")
-                self.connection = psycopg2.connect(self.pg_url, connect_timeout=2)
+                self.connection = psycopg2.connect(self.pg_url, connect_timeout=15)
             else:
                 self.connection = psycopg2.connect(**self.pg_config)
             self.mode = "postgres"
