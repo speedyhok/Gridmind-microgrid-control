@@ -99,14 +99,24 @@ class GridMindDBClient:
                             continue
                         try:
                             cursor.execute(statement)
+                            self.connection.commit()
                         except Exception as e:
                             # Rollback sub-transaction and log
                             self.connection.rollback()
-                            if "timescaledb" in statement.lower():
-                                logger.debug(f"TimescaleDB command skipped (likely not running standard Timescale image): {e}")
+                            if "timescaledb" in statement.lower() or "hypertable" in statement.lower():
+                                logger.info(f"TimescaleDB command skipped (not supported on this Postgres instance): {e}")
                             else:
                                 logger.warning(f"SQL Statement skipped: {e}")
-                    self.connection.commit()
+                    
+                    # Migrate existing Postgres DB: add battery_soc_pct column if not present
+                    try:
+                        cursor.execute("ALTER TABLE telemetry_power ADD COLUMN IF NOT EXISTS battery_soc_pct DOUBLE PRECISION DEFAULT NULL;")
+                        self.connection.commit()
+                        logger.info("Migrated Postgres telemetry_power: added battery_soc_pct column.")
+                    except Exception as me:
+                        self.connection.rollback()
+                        logger.warning(f"Could not migrate Postgres telemetry_power battery_soc_pct column: {me}")
+                        
                     logger.info("PostgreSQL schema successfully initialized.")
                 else:
                     logger.warning("schema.sql file not found. Database structure must be pre-created.")
