@@ -27,8 +27,7 @@ CREATE TABLE IF NOT EXISTS telemetry_power (
     power_kw DOUBLE PRECISION NOT NULL,
     voltage DOUBLE PRECISION,
     status VARCHAR(20) NOT NULL, -- 'operational', 'off', 'error'
-    anomaly_flag BOOLEAN DEFAULT FALSE,
-    battery_soc_pct DOUBLE PRECISION DEFAULT NULL
+    anomaly_flag BOOLEAN DEFAULT FALSE
 );
 
 -- Convert to hypertable for TimescaleDB (if using Timescale)
